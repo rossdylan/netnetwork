@@ -25,8 +25,18 @@ class Connection(object):
     def from_line(cls, line):
         raw_split = [w for w in line.split(' ') if w != '']
         formatted_split = raw_split[:-2]
-        formatted_split.extend([tuple(raw_split[-2].split(':')),
-                                tuple(raw_split[-1].split(':'))])
+        local = raw_split[-2].split(':')
+        peer = raw_split[-1].split(':')
+        if len(local) > 2:
+            local = (':'.join(local[:-1]), local[-1])
+        else:
+            local = tuple(local)
+
+        if len(peer) > 2:
+            peer = (':'.join(peer[:-1]), peer[-1])
+        else:
+            peer = tuple(peer)
+        formatted_split.extend([local, peer])
         return Connection(*formatted_split)
 
     def __repr__(self):
