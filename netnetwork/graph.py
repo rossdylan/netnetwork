@@ -18,7 +18,7 @@ class GraphAggregator(object):
     def rem_conn(self, local, peer):
         if (local, peer) in self.connections:
             print("Removing conn: {0} -> {1}".format(local, peer))
-            self.connections = self.connections - (local, peer)
+            self.connections = tuple(frozenset(self.connections) - frozenset(((local, peer),)))
             self.changed = True
 
     def graph(self):
@@ -95,4 +95,5 @@ def collector():
                                         'local': pconn.local[0],
                                         'peer': pconn.peer[0]
                                     })])
+        prev_conns = conns
         time.sleep(15)

@@ -1,9 +1,14 @@
 var width = window.width || 1060;
 var height = window.height || 600;
 
+var zoom = d3.behavior.zoom()
+    .on("zoom", zoomed);
+
 var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+    .attr("viewBox", "0 0 960 500")
+    .attr("preserveAspectRatio", "xMidYMid")
+    .call(zoom);
+
 
 var force = d3.layout.force()
     .gravity(0.5)
@@ -14,17 +19,21 @@ var force = d3.layout.force()
     .links([])
     .start();
 
-
 var node = svg.selectAll(".node");
 var link = svg.selectAll("line");
 var connection = new WebSocket('ws://localhost:8080/ws', []);
+
+function zoomed() {
+    svg.attr("transform", "scale(" + d3.event.scale + ")");
+}
+
 connection.onmessage = function(event) {
         var jsonData = JSON.parse(event.data);
         console.log(jsonData);
-        //node = node.data(jsonData.nodes, function(d) { return d.name; });
-        //link = link.data(jsonData.links, function(d) { return d.source + "-" + d.target; });
-        node = node.data(jsonData.nodes);
-        link = link.data(jsonData.links);
+        node = node.data(jsonData.nodes, function(d) { return d.name; });
+        link = link.data(jsonData.links, function(d) { return d.source + "-" + d.target; });
+        //node = node.data(jsonData.nodes);
+        //link = link.data(jsonData.links);
         link.exit().remove();
         link.enter().append("line")
             .attr("class", "link");
