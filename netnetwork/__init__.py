@@ -1,4 +1,5 @@
 import zmq
+import os.path
 from tornado.web import Application, StaticFileHandler
 from tornado.websocket import WebSocketHandler
 from zmq.eventloop import ioloop as ZIOLoop
@@ -10,9 +11,10 @@ ZIOLoop.install()
 context = zmq.Context()
 
 Graph = None
+
 class WSHandler(WebSocketHandler):
     def open(self):
-        global Graph
+        global Graph  # globals :(
         sub_sock = context.socket(zmq.SUB)
         sub_sock.connect("ipc:///tmp/netnetwork.sock")
         sub_sock.setsockopt(zmq.SUBSCRIBE, 'gupdates')
@@ -34,9 +36,16 @@ class WSHandler(WebSocketHandler):
 
 
 def server():
+    """
+    Function that spins up the tornado webserver.
+    We have two routes, /static which goes to our js and html
+    and /ws which is the websocket which just streams stuff from
+    a zmq socket.
+    """
+    static_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "static")
     app = Application([
-        (r'/static/(.*)', StaticFileHandler, {"path": "./static"}),
         (r'/ws', WSHandler),
+        (r'/(.*)', StaticFileHandler, {"path": static_path}),
     ])
     app.listen(8080)
     IOLoop.instance().start()
